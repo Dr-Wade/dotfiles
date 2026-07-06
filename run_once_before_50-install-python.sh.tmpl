@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[python] %s\n' "$*"
+}
+
+ensure_python_commands() {
+  if ! has_cmd python && has_cmd python3; then
+    if ensure_symlink "$(command -v python3)" "$HOME/.local/bin/python"; then
+      log "Created python symlink at ~/.local/bin/python"
+    fi
+  fi
+
+  if ! has_cmd pip && has_cmd pip3; then
+    if ensure_symlink "$(command -v pip3)" "$HOME/.local/bin/pip"; then
+      log "Created pip symlink at ~/.local/bin/pip"
+    fi
+  fi
+}
+
+main() {
+  local missing=()
+
+  setup_sudo
+  detect_pkg_manager
+
+  if ! has_cmd python3; then
+    case "$PKG_MANAGER" in
+      brew) missing+=(python) ;;
+      *)    missing+=(python3) ;;
+    esac
+  fi
+
+  # On Homebrew, pip3 ships with the python formula, so no separate package.
+  if ! has_cmd pip3 && [ "$PKG_MANAGER" != "brew" ]; then
+    case "$PKG_MANAGER" in
+      apt|dnf|yum|zypper) missing+=(python3-pip) ;;
+      pacman) missing+=(python-pip) ;;
+      apk) missing+=(py3-pip) ;;
+      *) missing+=(python3-pip) ;;
+    esac
+  fi
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    log "Installing: ${missing[*]}"
+    install_pkgs "${missing[@]}"
+  else
+    log "python3 and pip3 already installed"
+  fi
+
+  ensure_python_commands
+}
+
+main "$@"

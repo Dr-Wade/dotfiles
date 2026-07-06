@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[zsh] %s\n' "$*"
+}
+
+install_zsh() {
+  if has_cmd zsh; then
+    log "zsh already installed"
+    return
+  fi
+
+  log "Installing zsh"
+  if ! install_pkgs zsh; then
+    log "Failed to install zsh (unsupported package manager?)"
+    return 1
+  fi
+}
+
+set_default_shell() {
+  local zsh_path
+
+  if ! has_cmd chsh; then
+    log "chsh not found; skipping default shell change"
+    return
+  fi
+
+  zsh_path="$(command -v zsh)"
+  if [ -z "$zsh_path" ]; then
+    log "zsh binary not found; cannot set default shell"
+    return 1
+  fi
+
+  if [ "${SHELL:-}" = "$zsh_path" ]; then
+    log "zsh is already the default shell"
+    return
+  fi
+
+  # A shell must be listed in /etc/shells before chsh will accept it.
+  if [ -w /etc/shells ] || [ -n "${SUDO}" ]; then
+    if ! grep -qxF "$zsh_path" /etc/shells 2>/dev/null; then
+      log "Adding $zsh_path to /etc/shells"
+      echo "$zsh_path" | $SUDO tee -a /etc/shells >/dev/null || true
+    fi
+  fi
+
+  log "Setting default shell to $zsh_path"
+  if ! chsh -s "$zsh_path" "$USER"; then
+    log "Could not set default shell automatically; run: chsh -s $zsh_path"
+  fi
+}
+
+install_oh_my_zsh() {
+  if [ -d "$HOME/.oh-my-zsh" ]; then
+    log "oh-my-zsh already installed"
+    return
+  fi
+
+  log "Installing oh-my-zsh"
+  RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+}
+
+main() {
+  setup_sudo
+  detect_pkg_manager
+
+  install_zsh
+  set_default_shell
+  install_oh_my_zsh
+}
+
+main "$@"

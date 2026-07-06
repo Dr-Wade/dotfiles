@@ -1,0 +1,28 @@
+[user]
+    name = Edward Tombre
+    email = edward.tombre@gmail.com
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+
+[core]
+    editor = vim
+    autocrlf = input
+
+[rerere]
+    enabled = true
+
+[fetch]
+    prune = true
+
+[merge]
+    conflictstyle = zdiff3
+
+[diff]
+    colorMoved = default

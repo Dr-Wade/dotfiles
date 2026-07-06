@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[nvm-pnpm] %s\n' "$*"
+}
+
+install_nvm() {
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    log "nvm already installed"
+    return
+  fi
+
+  log "Installing nvm"
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | sh
+}
+
+install_pnpm() {
+  if has_cmd pnpm; then
+    log "pnpm already installed"
+    return
+  fi
+
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    # shellcheck disable=SC1090
+    . "$HOME/.nvm/nvm.sh"
+  fi
+
+  if has_cmd corepack; then
+    log "Installing pnpm via corepack"
+    corepack enable
+    corepack prepare pnpm@latest --activate
+    return
+  fi
+
+  log "Installing pnpm via official installer"
+  curl -fsSL https://get.pnpm.io/install.sh | sh -
+}
+
+main() {
+  install_nvm
+  install_pnpm
+}
+
+main "$@"

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[rust] %s\n' "$*"
+}
+
+main() {
+  if has_cmd rustc; then
+    log "rust already installed"
+    exit 0
+  fi
+
+  log "Installing rust (rustup)"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+}
+
+main "$@"

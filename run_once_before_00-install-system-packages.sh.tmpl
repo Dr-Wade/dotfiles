@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[system-packages] %s\n' "$*"
+}
+
+install_homebrew() {
+  if has_cmd brew; then
+    return 0
+  fi
+
+  log "Installing Homebrew"
+  NONINTERACTIVE=1 /bin/bash -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Make brew available in the current shell for the rest of this run.
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
+main() {
+  local missing=()
+
+  setup_sudo
+
+  {{- if eq .chezmoi.os "darwin" }}
+  install_homebrew
+  {{- end }}
+
+  detect_pkg_manager
+
+  has_cmd curl || missing+=(curl)
+  has_cmd wget || missing+=(wget)
+  has_cmd git || missing+=(git)
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    log "Installing: ${missing[*]}"
+    install_pkgs "${missing[@]}"
+  else
+    log "curl, wget, git already installed"
+  fi
+}
+
+main "$@"

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[docker] %s\n' "$*"
+}
+
+install_pkg() {
+{{- if eq .chezmoi.os "darwin" }}
+  if ! has_cmd brew; then
+    log "Homebrew is required to install Docker Desktop on macOS"
+    return 1
+  fi
+  log "Installing Docker Desktop via Homebrew cask"
+  brew install --cask docker
+{{- else }}
+  if ! has_cmd curl; then
+    log "curl is required to install docker via get.docker.com"
+    return 1
+  fi
+  curl -fsSL https://get.docker.com/ | $SUDO sh
+{{- end }}
+}
+
+main() {
+  setup_sudo
+
+  if has_cmd docker; then
+    log "docker already installed"
+  else
+    log "Installing docker"
+    if ! install_pkg; then
+      exit 0
+    fi
+  fi
+
+  if has_cmd systemctl; then
+    $SUDO systemctl enable --now docker || true
+  fi
+}
+
+main "$@"
