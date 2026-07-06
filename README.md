@@ -10,11 +10,12 @@ on Linux it auto-detects `apt`/`dnf`/`yum`/`pacman`/`zypper`/`apk`.
 
 - Package manager: Homebrew (installed automatically on macOS)
 - System essentials: `curl`, `wget`, `git`
-- Zsh + Oh My Zsh
+- Zsh + Oh My Zsh, plus custom plugins (`zsh-syntax-highlighting`, `zsh-autosuggestions`, `you-should-use`)
 - Docker
 - Node tooling (`nvm`, `pnpm`)
 - Rust (`rustup`)
 - Python (`python3`, `pip3`, plus convenience symlinks)
+- CLI/app tooling: `direnv`; Tabby terminal (macOS only)
 - Post-apply health check for key commands
 
 ## Script layout
@@ -32,6 +33,7 @@ time via `{{ template "install-helpers.sh" . }}`.
 - `run_once_before_30-install-nvm-pnpm.sh.tmpl`
 - `run_once_before_40-install-rust.sh.tmpl`
 - `run_once_before_50-install-python.sh.tmpl`
+- `run_once_before_60-install-tools.sh.tmpl` (direnv, Tabby)
 
 ### Re-run-on-change scripts
 
@@ -70,7 +72,7 @@ chezmoi apply
 `run_onchange_after_90-healthcheck.sh` validates command availability.
 
 - **Required** (fails script if missing): `curl`, `git`, `zsh`, `python3`
-- **Optional** (warn-only): `pip3`, `docker`, `node`, `pnpm`, `rustc`, `cargo`
+- **Optional** (warn-only): `pip3`, `docker`, `node`, `pnpm`, `rustc`, `cargo`, `direnv`
 
 The script exits non-zero only when required checks fail.
 

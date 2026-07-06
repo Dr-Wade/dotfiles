@@ -63,6 +63,34 @@ install_oh_my_zsh() {
   RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 }
 
+clone_plugin() {
+  local name="$1"
+  local repo="$2"
+  local dest="$ZSH_CUSTOM/plugins/$name"
+
+  if [ -d "$dest" ]; then
+    log "$name already cloned"
+    return
+  fi
+
+  log "Cloning $name"
+  git clone --depth 1 "$repo" "$dest"
+}
+
+install_custom_plugins() {
+  # Custom plugins referenced in dot_zshrc (git and direnv are built in).
+  ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+
+  if ! has_cmd git; then
+    log "git not found; skipping custom plugin clone"
+    return
+  fi
+
+  clone_plugin zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting.git
+  clone_plugin zsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions.git
+  clone_plugin you-should-use https://github.com/MichaelAquilina/zsh-you-should-use.git
+}
+
 main() {
   setup_sudo
   detect_pkg_manager
@@ -70,6 +98,7 @@ main() {
   install_zsh
   set_default_shell
   install_oh_my_zsh
+  install_custom_plugins
 }
 
 main "$@"

@@ -36,6 +36,7 @@ main() {
   check_cmd pnpm optional || true
   check_cmd rustc optional || true
   check_cmd cargo optional || true
+  check_cmd direnv optional || true
 
   if [ "$failed" -ne 0 ]; then
     log "One or more required checks failed"

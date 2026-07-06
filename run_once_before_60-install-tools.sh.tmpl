@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{ template "install-helpers.sh" . }}
+
+log() {
+  printf '[tools] %s\n' "$*"
+}
+
+install_direnv() {
+  if has_cmd direnv; then
+    log "direnv already installed"
+    return
+  fi
+
+  log "Installing direnv"
+  if ! install_pkgs direnv; then
+    log "Failed to install direnv (unsupported package manager?)"
+  fi
+}
+
+{{- if eq .chezmoi.os "darwin" }}
+
+install_tabby() {
+  if [ -d "/Applications/Tabby.app" ]; then
+    log "Tabby already installed"
+    return
+  fi
+
+  if ! has_cmd brew; then
+    log "Homebrew is required to install Tabby"
+    return
+  fi
+
+  log "Installing Tabby"
+  brew install --cask tabby
+}
+{{- end }}
+
+main() {
+  setup_sudo
+  detect_pkg_manager
+
+  install_direnv
+{{- if eq .chezmoi.os "darwin" }}
+  install_tabby
+{{- end }}
+}
+
+main "$@"
